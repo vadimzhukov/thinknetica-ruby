@@ -1,26 +1,28 @@
 puts "Введите название товара, его стоимость и количество. Для завершения ввода введите слово \"стоп\" вместо названия товара"
 
 goods = {}
+
+#цикл ввода значений пользователем
 loop do
-title = gets.chomp
-if title.downcase == "стоп"
-  break
-end
-price = gets.chomp.to_f
-count = gets.chomp.to_f
+  title = gets.chomp
+  if title.downcase == "стоп"
+    break
+  end
+  price = gets.chomp.to_f
+  count = gets.chomp.to_f
 
-# добавляем товар в хэш попутно проверяя есть ли уже такой товар и есть ли количество по такой цене
-if goods[title].nil?
-  goods[title] = {price => count}
-elsif goods[title][price].nil?
-  goods[title].merge!({price => count})
-else
-  goods[title][price] += count
-end
+  # сразу добавляем товар в хэш попутно проверяя есть ли уже такой товар и есть ли количество по такой цене
+  if goods[title].nil?
+    goods[title] = {price => count}
+  elsif goods[title][price].nil?
+    goods[title].merge!({price => count})
+  else
+    goods[title][price] += count
+  end
 
 end
 
-# вычисляем итоговую стоимость каждого товара и 
+# вычисляем итоговую стоимость каждого товара
 total_price ={}
 
 goods.each do |title, price_count|
@@ -33,6 +35,7 @@ goods.each do |title, price_count|
   end
 end
 
+#вычисляем стоимость всех товаров в корзине
 cart_price = 0
 total_price.each do |title, price|
   cart_price += price
