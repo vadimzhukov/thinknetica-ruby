@@ -1,9 +1,15 @@
 class Station
-  attr_reader :title, :trains
+  attr_reader :title
 
   def initialize(title)
     @title = title
     @trains = []
+  end
+
+  def trains
+    result = []
+    @trains.each{|t| result << "Номер:#{t.number} Тип:#{t.type} Вагоны:#{t.wagons}"}
+    result
   end
 
   def trains_by_type(type)

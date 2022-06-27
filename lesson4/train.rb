@@ -17,12 +17,12 @@ class Train
   end
 
   def add_wagon(wagon)
-      if self.speed == 0 
-          @wagons << wagon
-          puts "К поезду #{self.number} прицеплен вагон, общее количество вагонов: #{wagons.size}"
-      else
-        puts "Для прицепления вагона поезд должен остановиться"
-      end
+    if self.speed == 0 
+        @wagons << wagon
+        puts "К поезду #{self.number} прицеплен вагон, общее количество вагонов: #{wagons.size}"
+    else
+      puts "Для прицепления вагона поезд должен остановиться"
+    end
   end
 
   def remove_wagon
@@ -36,7 +36,7 @@ class Train
     else
       puts "Для отцепления вагона поезд должен остановиться"
     end
-end
+  end
 
   def set_route(route)
     @route = route
@@ -49,9 +49,9 @@ end
         @current_station = @route.stations[@route.stations.index(@current_station) + 1]
         @current_station.receive_train(self)
       else
-        puts "Поезд на конечной станции и не может двигаться вперед"
-      end 
-    end
+      puts "Поезд на конечной станции и не может двигаться вперед"
+    end 
+  end
 
     if direction == BACKWARD 
       if !first_station?(@current_station, @route)
