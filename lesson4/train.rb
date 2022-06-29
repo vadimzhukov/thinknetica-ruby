@@ -1,18 +1,33 @@
+# train.rb 
+require_relative 'manufacturer'
+require_relative 'instance_counter'
+
 class Train
+  include Manufacturer
+  include InstanceCounter
+
   FORWARD = :forward
   BACKWARD = :backward
 
   attr_accessor :speed
   attr_reader :wagons, :current_station, :number, :type
 
+  @@trains = []
+
   def initialize(number, type)
     @number = number
     @type = type
     @speed = 0
     @wagons = []
+    @@trains << self
+    register_instance
   end
 
-  def stop 
+  def self.find(number)
+    @@trains.find{|t| t.number == number}
+  end
+
+  def stop
     self.speed = 0
   end
 
