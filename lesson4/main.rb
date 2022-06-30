@@ -10,6 +10,8 @@ class Main
   MENU_LAST_ITEM = 13
   EXIT_ACTION = 99
 
+  attr_reader :MENU_FIRST_ITEM, :MENU_LAST_ITEM, :EXIT_ACTION, :menu
+
   def initialize
     @trains = []
     @stations = []
@@ -39,16 +41,6 @@ class Main
   def start
     seed
     show_menu
-    #============= main loop ==============
-    while true
-      action_num = action_input
-      break if action_num == EXIT_ACTION
-
-      action = get_action(action_num)
-      puts "--- #{@menu.find { |m| m[:number] == action_num }[:message]} ---"
-      send(action)
-    end
-    #======================================
   end
 
   def show_menu
@@ -101,9 +93,9 @@ class Main
     number = input_of_action('Введите номер поезда')
     type = input_of_action('Введите тип поезда (passenger/cargo)')
     if type.to_sym == :passenger
-      @trains << PassengerTrain.new(number, type)
+      @trains << PassengerTrain.new(number)
     elsif type.to_sym == :cargo
-      @trains << CargoTrain.new(number, type)
+      @trains << CargoTrain.new(number)
     end
     show_trains
   end
@@ -205,9 +197,9 @@ class Main
     @stations << Station.new('Murmansk')
     @stations << Station.new('Ekaterinburg')
 
-    @trains << PassengerTrain.new(0o01, :passenger)
-    @trains << CargoTrain.new(0o02, :cargo)
-    @trains << PassengerTrain.new(0o03, :passenger)
+    @trains << PassengerTrain.new(0o01)
+    @trains << CargoTrain.new(0o02)
+    @trains << PassengerTrain.new(0o03)
 
     @routes << Route.new(@stations[0], @stations[1])
     @routes << Route.new(@stations[0], @stations[2])
@@ -223,4 +215,15 @@ class Main
   end
 end
 
-Main.new.start
+game = Main.new
+game.start
+#============= main loop ==============
+while true
+  action_num = game.action_input
+  break if action_num == game.EXIT_ACTION
+
+  action = game.get_action(action_num)
+  puts "--- #{game.menu.find { |m| m[:number] == action_num }[:message]} ---"
+  game.send(action)
+end
+#======================================
