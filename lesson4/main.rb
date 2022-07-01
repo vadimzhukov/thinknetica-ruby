@@ -163,7 +163,7 @@ class Main
 
   def choose_train
     show_trains
-    train_number = input_of_action('Выберите номер поезда:').to_i
+    train_number = input_of_action('Выберите номер поезда:').to_s
     train = @trains.find { |t| t.number == train_number }
   end
 
@@ -197,9 +197,9 @@ class Main
     @stations << Station.new('Murmansk')
     @stations << Station.new('Ekaterinburg')
 
-    @trains << PassengerTrain.new(0o01)
-    @trains << CargoTrain.new(0o02)
-    @trains << PassengerTrain.new(0o03)
+    @trains << PassengerTrain.new("1")
+    @trains << CargoTrain.new("2")
+    @trains << PassengerTrain.new("3")
 
     @routes << Route.new(@stations[0], @stations[1])
     @routes << Route.new(@stations[0], @stations[2])

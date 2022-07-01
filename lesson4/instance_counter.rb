@@ -7,13 +7,10 @@ module InstanceCounter
   module ClassMethods
     attr_reader :instances
 
-    
-
     private
-    attr_writer :instances
     def add_instance
-      self.instances ||= 0
-      self.instances += 1
+      instances ||= 0
+      instances += 1
     end
   end
 

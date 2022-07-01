@@ -1,4 +1,4 @@
-# train.rb 
+# train.rb
 require_relative 'manufacturer'
 require_relative 'instance_counter'
 
@@ -24,7 +24,7 @@ class Train
   end
 
   def self.find(number)
-    @@trains.find{|t| t.number == number}
+    @@trains.find { |t| t.number == number }
   end
 
   def stop
@@ -32,24 +32,24 @@ class Train
   end
 
   def add_wagon(wagon)
-    if self.speed == 0 
-        @wagons << wagon
-        puts "К поезду #{self.number} прицеплен вагон, общее количество вагонов: #{wagons.size}"
+    if speed == 0
+      @wagons << wagon
+      puts "К поезду #{number} прицеплен вагон, общее количество вагонов: #{wagons.size}"
     else
-      puts "Для прицепления вагона поезд должен остановиться"
+      puts 'Для прицепления вагона поезд должен остановиться'
     end
   end
 
   def remove_wagon
-    if self.speed == 0
-      if @wagons.size > 0 
+    if speed == 0
+      if @wagons.size > 0
         @wagons.pop
-        puts "От поезда #{self.number} отцеплен вагон, общее количество вагонов: #{wagons.size}"
+        puts "От поезда #{number} отцеплен вагон, общее количество вагонов: #{wagons.size}"
       else
-        puts "В поезде нет вагонов"
+        puts 'В поезде нет вагонов'
       end
     else
-      puts "Для отцепления вагона поезд должен остановиться"
+      puts 'Для отцепления вагона поезд должен остановиться'
     end
   end
 
@@ -59,35 +59,34 @@ class Train
   end
 
   def move(direction)
-    if direction == FORWARD 
+    if direction == FORWARD
       if !last_station?(@current_station, @route)
         @current_station = @route.stations[@route.stations.index(@current_station) + 1]
         @current_station.receive_train(self)
       else
-      puts "Поезд на конечной станции и не может двигаться вперед"
-    end 
-  end
+        puts 'Поезд на конечной станции и не может двигаться вперед'
+      end
+    end
 
-    if direction == BACKWARD 
+    if direction == BACKWARD
       if !first_station?(@current_station, @route)
         @current_station = @route.stations[@route.stations.index(@current_station) - 1]
         @current_station.receive_train(self)
       else
-        puts "Поезд на начальной станции и не может двигаться назад"
+        puts 'Поезд на начальной станции и не может двигаться назад'
       end
     end
   end
 
-
-#==========#
+  #==========#
   private
 
-  #метод используется только для метода класса move
+  # метод используется только для метода класса move
   def last_station?(current_station, route)
     current_station == route.stations.last
   end
 
-  #метод используется только для метода класса move
+  # метод используется только для метода класса move
   def first_station?(current_station, route)
     current_station == route.stations.first
   end
