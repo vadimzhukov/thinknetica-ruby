@@ -90,14 +90,21 @@ class Main
   end
 
   def create_train
-    number = input_of_action('Введите номер поезда')
+    number = input_of_action('Введите номер поезда в формате <abc-de> состоящий из букв либо цифр')
     type = input_of_action('Введите тип поезда (passenger/cargo)')
     if type.to_sym == :passenger
       @trains << PassengerTrain.new(number)
     elsif type.to_sym == :cargo
       @trains << CargoTrain.new(number)
+    else
+      @trains << Train.new(number, type)
     end
+  
+    puts "Создан поезд номер #{number} с типом #{type}"
     show_trains
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def create_route
@@ -197,9 +204,9 @@ class Main
     @stations << Station.new('Murmansk')
     @stations << Station.new('Ekaterinburg')
 
-    @trains << PassengerTrain.new("1")
-    @trains << CargoTrain.new("2")
-    @trains << PassengerTrain.new("3")
+    @trains << PassengerTrain.new("Ф12-AC")
+    @trains << CargoTrain.new("666-AD")
+    @trains << PassengerTrain.new("555-LS")
 
     @routes << Route.new(@stations[0], @stations[1])
     @routes << Route.new(@stations[0], @stations[2])
@@ -214,6 +221,7 @@ class Main
     @trains[2].set_route(@routes[2])
   end
 end
+#======================================
 
 game = Main.new
 game.start

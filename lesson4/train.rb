@@ -1,13 +1,16 @@
 # train.rb
 require_relative 'manufacturer'
 require_relative 'instance_counter'
+require_relative 'validation'
 
 class Train
   include Manufacturer
   include InstanceCounter
+  include Validation
 
   FORWARD = :forward
   BACKWARD = :backward
+  NUMBER_LENGTH = (1..10)
 
   attr_accessor :speed
   attr_reader :wagons, :current_station, :number, :type
@@ -15,12 +18,27 @@ class Train
   @@trains = []
 
   def initialize(number, type)
+    validate_not_nil(number)
+    validate_length(number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
+    validate_not_yet_existed("@number", number, @@trains)
+    validate_by_regexp(type, /^(passenger|cargo)$/)
+    validate_by_regexp(number, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i)
+
     @number = number
-    @type = type
+    @type = type.to_sym
     @speed = 0
     @wagons = []
     @@trains << self
     register_instance
+  end
+
+  def valid?
+    validate_not_nil(self.number)
+    validate_length(self.number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
+    validate_by_regexp(self.type, /^(passenger|cargo)$/)
+    true
+    rescue
+      false
   end
 
   def self.find(number)
@@ -63,8 +81,6 @@ class Train
       if !last_station?(@current_station, @route)
         @current_station = @route.stations[@route.stations.index(@current_station) + 1]
         @current_station.receive_train(self)
-      else
-        puts 'Поезд на конечной станции и не может двигаться вперед'
       end
     end
 
@@ -72,8 +88,6 @@ class Train
       if !first_station?(@current_station, @route)
         @current_station = @route.stations[@route.stations.index(@current_station) - 1]
         @current_station.receive_train(self)
-      else
-        puts 'Поезд на начальной станции и не может двигаться назад'
       end
     end
   end
