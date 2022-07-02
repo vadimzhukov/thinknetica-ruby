@@ -87,6 +87,9 @@ class Main
     title = input_of_action('Введите название станции')
     @stations << Station.new(title)
     show_stations
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def create_train
@@ -116,6 +119,9 @@ class Main
                                                                                  s.title == last_station_name
                                                                                end)
     show_routes
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def add_station_to_route(route)
@@ -130,7 +136,6 @@ class Main
   end
 
   def add_remove_station_to_route
-    show_routes
     route = choose_route
     act = input_of_action('Добавить (+) или удалить (-) станцию?')
     act == '+' ? add_station_to_route(route) : remove_station_from_route(route)
@@ -159,19 +164,36 @@ class Main
     @stations.each { |s| puts "#{s.title} / поезда на станции: #{s.trains}" }
   end
 
-  #===================================
+  def add_wagon
+    train = choose_train
+    puts train
+    wagon = Wagon.new(train.type)
+    puts wagon
+    train.add_wagon(wagon)
+  end
 
-  private
+  def remove_wagon
+    train = choose_train
+    train.remove_wagon
+  end
 
   def input_of_action(message)
     puts message
     input = gets.chomp
   end
 
+  #===================================
+
+  private
+
+
+
   def choose_train
     show_trains
     train_number = input_of_action('Выберите номер поезда:').to_s
     train = @trains.find { |t| t.number == train_number }
+    puts "Такой поезд не найден" if train.nil?
+    train
   end
 
   def choose_route
@@ -185,16 +207,7 @@ class Main
     station = @stations.find { |s| s.title == station_title }
   end
 
-  def add_wagon
-    train = choose_train
-    wagon = Wagon.new(train.type)
-    train.add_wagon(wagon)
-  end
-
-  def remove_wagon
-    train = choose_train
-    train.remove_wagon
-  end
+  
 
   #========== Test data ===================
   def seed
