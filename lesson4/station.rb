@@ -11,18 +11,21 @@ class Station
   @@stations = []
 
   def initialize(title)
-    validate_not_nil(title)
-    validate_length(title, TITLE_LENGTH.first, TITLE_LENGTH.last)
-    validate_not_yet_existed("@title", title, @@stations)
     @title = title
+    validate!
     @trains = []
     register_instance
     @@stations << self
   end
 
+  def validate!
+    validate_not_nil(title)
+    validate_length(title, TITLE_LENGTH.first, TITLE_LENGTH.last)
+    validate_not_yet_existed("@title", title, @@stations)
+  end
+
   def valid?
-    validate_not_nil(@title)
-    validate_length(@title, TITLE_LENGTH.first, TITLE_LENGTH.last)
+    validate!
     true
     rescue
       false

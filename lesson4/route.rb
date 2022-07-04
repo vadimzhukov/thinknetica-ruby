@@ -10,22 +10,22 @@ class Route
   @@counter = 0
 
   def initialize(start_station, final_station)
-    validate_not_nil(start_station)
-    validate_not_nil(final_station)
-    validate_existed("@title", start_station.title, Station.stations)
-    validate_existed("@title", final_station.title, Station.stations)
-    
     @stations = [start_station, final_station]
+    validate!
     @@counter += 1
     @number = @@counter
     register_instance
   end
 
+  def validate!
+    validate_not_nil(stations.first)
+    validate_not_nil(stations.last)
+    validate_existed("@title", stations.first.title, Station.stations)
+    validate_existed("@title", stations.last.title, Station.stations)
+  end
+
   def valid?
-    validate_not_nil(@stations.first)
-    validate_not_nil(@stations.last)
-    validate_existed("@title", @stations.first, Station.stations)
-    validate_existed("@title", @stations.first, Station.stations)
+    validate!
     true
   rescue
     false

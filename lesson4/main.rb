@@ -87,9 +87,7 @@ class Main
     title = input_of_action('Введите название станции')
     @stations << Station.new(title)
     show_stations
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
+    repeat_input
   end
 
   def create_train
@@ -105,9 +103,7 @@ class Main
   
     puts "Создан поезд номер #{number} с типом #{type}"
     show_trains
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
+    repeat_input
   end
 
   def create_route
@@ -119,9 +115,8 @@ class Main
                                                                                  s.title == last_station_name
                                                                                end)
     show_routes
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
+                                                                               
+    repeat_input
   end
 
   def add_station_to_route(route)
@@ -186,6 +181,11 @@ class Main
 
   private
 
+  def repeat_input
+    rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
+  end
 
 
   def choose_train

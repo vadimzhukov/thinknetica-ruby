@@ -18,24 +18,26 @@ class Train
   @@trains = []
 
   def initialize(number, type)
-    validate_not_nil(number)
-    validate_length(number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
-    validate_not_yet_existed("@number", number, @@trains)
-    validate_by_regexp(type, /^(passenger|cargo)$/)
-    validate_by_regexp(number, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i)
-
     @number = number
     @type = type.to_sym
+    validate!
     @speed = 0
     @wagons = []
     @@trains << self
     register_instance
   end
 
+  def validate!
+    validate_not_nil(number)
+    validate_length(number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
+    validate_not_yet_existed("@number", number, @@trains)
+    validate_by_regexp(type, /^(passenger|cargo)$/)
+    validate_by_regexp(number, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i)
+  end
+  
+
   def valid?
-    validate_not_nil(self.number)
-    validate_length(self.number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
-    validate_by_regexp(self.type, /^(passenger|cargo)$/)
+    validate!
     true
     rescue
       false
