@@ -3,8 +3,8 @@ class PassengerWagon < Wagon
 
   def initialize(total_places)
     super(:passenger)
-    @total_places = total_places
-    @available_places = total_places
+    @total_places = total_places.to_i
+    @available_places = total_places.to_i
     @occupied_places = 0
   end
 

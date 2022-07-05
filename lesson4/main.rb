@@ -82,36 +82,39 @@ class Main
     title = input_of_action('Введите название станции')
     @stations << Station.new(title)
     show_stations
-    repeat_input
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def create_train
     number = input_of_action('Введите номер поезда в формате <abc-de> состоящий из букв либо цифр')
     type = input_of_action('Введите тип поезда (passenger/cargo)')
-    @trains << if type.to_sym == :passenger
+    @trains << case type
+               when type.to_sym == :passenger
                  PassengerTrain.new(number)
-               elsif type.to_sym == :cargo
+               when type.to_sym == :cargo
                  CargoTrain.new(number)
                else
                  Train.new(number, type)
                end
-
     puts "Создан поезд номер #{number} с типом #{type}"
     show_trains
-    repeat_input
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def create_route
     puts 'Текущие станции:'
     @stations.each { |s| puts s.title }
-    first_station_name = input_of_action('Введите название начальной станции маршрута из доступных')
-    last_station_name = input_of_action('Введите название конечной станции маршрута из доступных')
-    @routes << Route.new(@stations.find { |s| s.title == first_station_name }, @stations.find do |s|
-                                                                                 s.title == last_station_name
-                                                                               end)
+    first_station = choose_station
+    last_station = choose_station
+    @routes << Route.new(first_station, last_station)
     show_routes
-
-    repeat_input
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def add_station_to_route(route)
@@ -162,6 +165,9 @@ class Main
       wagon = CargoWagon.new(volume)
     end
     train.add_wagon(wagon)
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def remove_wagon
@@ -241,7 +247,7 @@ class Main
 
   private
 
-  def repeat_input
+  def repeat_if_err
   rescue StandardError => e
     puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
