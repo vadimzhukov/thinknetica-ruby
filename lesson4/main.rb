@@ -4,10 +4,12 @@ require_relative 'train'
 require_relative 'passenger_train'
 require_relative 'cargo_train'
 require_relative 'wagon'
+require_relative 'passenger_wagon'
+require_relative 'cargo_wagon'
 
 class Main
   MENU_FIRST_ITEM = 0
-  MENU_LAST_ITEM = 13
+  MENU_LAST_ITEM = 16
   EXIT_ACTION = 99
 
   attr_reader :MENU_FIRST_ITEM, :MENU_LAST_ITEM, :EXIT_ACTION, :menu
@@ -34,6 +36,9 @@ class Main
       { number: 11, message: 'Список станций', action: :show_stations },
       { number: 12, message: 'Список поездов', action: :show_trains },
       { number: 13, message: 'Список маршрутов', action: :show_routes },
+      { number: 14, message: 'Список поездов на станции', action: :show_trains_on_station },
+      { number: 15, message: 'Список вагонов поезда', action: :show_train_with_wagons },
+      { number: 16, message: 'Занять место/ объем в вагоне', action: :occupy_wagon },
       { number: 99, message: 'Завершить выполнение программы', action: :exit }
     ]
   end
@@ -68,19 +73,9 @@ class Main
     menu_item[:action]
   end
 
-  def show_stations
-    puts 'Список станций:'
-    @stations.each { |s| puts s.title }
-  end
-
-  def show_trains
-    puts 'Список поездов:'
-    @trains.each { |t| puts "#{t.number} #{t.type} #{t.wagons}" }
-  end
-
-  def show_routes
-    puts 'Список маршрутов:'
-    @routes.each { |r| puts "#{r.number}: #{r.show_stations}" }
+  def input_of_action(message)
+    puts message
+    input = gets.chomp
   end
 
   def create_station
@@ -93,14 +88,14 @@ class Main
   def create_train
     number = input_of_action('Введите номер поезда в формате <abc-de> состоящий из букв либо цифр')
     type = input_of_action('Введите тип поезда (passenger/cargo)')
-    if type.to_sym == :passenger
-      @trains << PassengerTrain.new(number)
-    elsif type.to_sym == :cargo
-      @trains << CargoTrain.new(number)
-    else
-      @trains << Train.new(number, type)
-    end
-  
+    @trains << if type.to_sym == :passenger
+                 PassengerTrain.new(number)
+               elsif type.to_sym == :cargo
+                 CargoTrain.new(number)
+               else
+                 Train.new(number, type)
+               end
+
     puts "Создан поезд номер #{number} с типом #{type}"
     show_trains
     repeat_input
@@ -115,7 +110,7 @@ class Main
                                                                                  s.title == last_station_name
                                                                                end)
     show_routes
-                                                                               
+
     repeat_input
   end
 
@@ -154,16 +149,18 @@ class Main
     train.move(:backward)
   end
 
-  def show_stations_with_trains
-    puts 'Список станций c поездами:'
-    @stations.each { |s| puts "#{s.title} / поезда на станции: #{s.trains}" }
-  end
-
   def add_wagon
     train = choose_train
-    puts train
-    wagon = Wagon.new(train.type)
-    puts wagon
+    case train.type
+    when :passenger
+      puts 'Введите количество мест вагона'
+      places = gets.chomp
+      wagon = PassengerWagon.new(places)
+    when :cargo
+      puts 'Введите максимальный объем вагона'
+      volume = gets.chomp
+      wagon = CargoWagon.new(volume)
+    end
     train.add_wagon(wagon)
   end
 
@@ -172,27 +169,89 @@ class Main
     train.remove_wagon
   end
 
-  def input_of_action(message)
-    puts message
-    input = gets.chomp
+  #===== Procs ============
+  def trains_info
+    trains_info = proc do |tr|
+      puts "Поезд №#{tr.number} Тип:#{tr.type} Вагонов:#{tr.wagons.size}"
+    end
   end
 
-  #===================================
+  def wagons_info
+    wagons_info = proc do |w|
+      print "№ #{w.number}, тип: #{w.type}, "
+      puts "объем свободный|занятый: #{w.available_volume}|#{w.occupied_volume}" if w.type == :cargo
+      puts "мест свободно|занято: #{w.available_places}|#{w.occupied_places}" if w.type == :passenger
+    end
+  end
+
+  def trains_with_wagons_info
+    trains_with_wagons_info = proc do |tr|
+      puts "Поезд №#{tr.number} Тип:#{tr.type} Вагонов:#{tr.wagons.size}"
+      puts 'Вагоны поезда: '
+      tr.iterate_wagons(wagons_info)
+    end
+  end
+
+  #===============================
+
+  def show_stations_with_trains
+    puts 'Список станций c поездами:'
+    @stations.each do |s|
+      puts "Станция: #{s.title} / Поезда на станции:"
+      s.iterate_trains(trains_with_wagons_info)
+    end
+  end
+
+  def show_stations
+    puts 'Список станций:'
+    @stations.each { |s| puts s.title }
+  end
+
+  def show_trains
+    puts 'Список поездов:'
+    @trains.each { |t| puts "№ #{t.number} - #{t.type}, #{t.wagons.size} вагона(ов)" }
+  end
+
+  def show_routes
+    puts 'Список маршрутов:'
+    @routes.each { |r| puts "#{r.number}: #{r.show_stations}" }
+  end
+
+  def show_trains_on_station(station = choose_station)
+    puts station.title
+    station.iterate_trains(trains_info)
+  end
+
+  def show_train_with_wagons(train = choose_train)
+    train.iterate_wagons(wagons_info)
+  end
+
+  def occupy_wagon
+    train = choose_train
+    wagon = choose_wagon(train)
+    if wagon.nil?
+      puts 'У данного поезда нет вагонов'
+    else
+      wagon.occupy
+    end
+    show_train_with_wagons(train)
+  end
+
+  #=========== Private methods ========================
 
   private
 
   def repeat_input
-    rescue StandardError => e
+  rescue StandardError => e
     puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
-
 
   def choose_train
     show_trains
     train_number = input_of_action('Выберите номер поезда:').to_s
     train = @trains.find { |t| t.number == train_number }
-    puts "Такой поезд не найден" if train.nil?
+    puts 'Такой поезд не найден' if train.nil?
     train
   end
 
@@ -207,7 +266,21 @@ class Main
     station = @stations.find { |s| s.title == station_title }
   end
 
-  
+  def choose_wagon(train)
+    return nil if train.wagons.empty?
+
+    train.wagons.each do |w|
+      case train.type
+      when :cargo
+        puts "№ #{w.number} - #{w.type} свободно|занято объема #{w.available_volume}|#{w.occupied_volume}"
+      when :passenger
+        puts "№ #{w.number} - #{w.type} свободно|занято мест #{w.available_places}|#{w.occupied_places}"
+      end
+    end
+    puts 'Введите номер вагона'
+    wagon_number = gets.chomp.to_i
+    wagon = train.wagons.find { |w| w.number == wagon_number }
+  end
 
   #========== Test data ===================
   def seed
@@ -217,9 +290,21 @@ class Main
     @stations << Station.new('Murmansk')
     @stations << Station.new('Ekaterinburg')
 
-    @trains << PassengerTrain.new("Ф12-AC")
-    @trains << CargoTrain.new("666-AD")
-    @trains << PassengerTrain.new("555-LS")
+    @trains << PassengerTrain.new('Ф12-AC')
+    @trains[0].add_wagon(PassengerWagon.new(36))
+    @trains[0].add_wagon(PassengerWagon.new(32))
+    @trains[0].add_wagon(PassengerWagon.new(32))
+
+    @trains << CargoTrain.new('666-AD')
+    @trains[1].add_wagon(CargoWagon.new(10))
+    @trains[1].add_wagon(CargoWagon.new(20))
+    @trains[1].add_wagon(CargoWagon.new(30))
+    @trains[1].add_wagon(CargoWagon.new(40))
+
+    @trains << PassengerTrain.new('555-LS')
+    @trains[2].add_wagon(PassengerWagon.new(36))
+    @trains[2].add_wagon(PassengerWagon.new(32))
+    @trains[2].add_wagon(PassengerWagon.new(32))
 
     @routes << Route.new(@stations[0], @stations[1])
     @routes << Route.new(@stations[0], @stations[2])

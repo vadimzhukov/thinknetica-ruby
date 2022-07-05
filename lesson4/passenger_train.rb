@@ -9,7 +9,7 @@ class PassengerTrain < Train
   end
 
   def add_wagon(wagon)
-      super(wagon) if wagon.type == "passenger"
+      super(wagon) if wagon.type == :passenger
   end
   
 end

@@ -2,11 +2,13 @@
 require_relative 'manufacturer'
 require_relative 'instance_counter'
 require_relative 'validation'
+require_relative 'iterators'
 
 class Train
   include Manufacturer
   include InstanceCounter
   include Validation
+  include Iterators
 
   FORWARD = :forward
   BACKWARD = :backward
@@ -30,17 +32,16 @@ class Train
   def validate!
     validate_not_nil(number)
     validate_length(number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
-    validate_not_yet_existed("@number", number, @@trains)
+    validate_not_yet_existed('@number', number, @@trains)
     validate_by_regexp(type, /^(passenger|cargo)$/)
     validate_by_regexp(number, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i)
   end
-  
 
   def valid?
     validate!
     true
-    rescue
-      false
+  rescue StandardError
+    false
   end
 
   def self.find(number)
@@ -54,7 +55,6 @@ class Train
   def add_wagon(wagon)
     if speed == 0
       @wagons << wagon
-      puts "К поезду #{number} прицеплен вагон, общее количество вагонов: #{wagons.size}"
     else
       puts 'Для прицепления вагона поезд должен остановиться'
     end
@@ -64,7 +64,6 @@ class Train
     if speed == 0
       if @wagons.size > 0
         @wagons.pop
-        puts "От поезда #{number} отцеплен вагон, общее количество вагонов: #{wagons.size}"
       else
         puts 'В поезде нет вагонов'
       end
@@ -79,19 +78,19 @@ class Train
   end
 
   def move(direction)
-    if direction == FORWARD
-      if !last_station?(@current_station, @route)
-        @current_station = @route.stations[@route.stations.index(@current_station) + 1]
-        @current_station.receive_train(self)
-      end
+    if direction == FORWARD && !last_station?(@current_station, @route)
+      @current_station = @route.stations[@route.stations.index(@current_station) + 1]
+      @current_station.receive_train(self)
     end
 
-    if direction == BACKWARD
-      if !first_station?(@current_station, @route)
-        @current_station = @route.stations[@route.stations.index(@current_station) - 1]
-        @current_station.receive_train(self)
-      end
+    if direction == BACKWARD && !first_station?(@current_station, @route)
+      @current_station = @route.stations[@route.stations.index(@current_station) - 1]
+      @current_station.receive_train(self)
     end
+  end
+
+  def iterate_wagons(block)
+    wagons.each{|w| block.call(w)}
   end
 
   #==========#

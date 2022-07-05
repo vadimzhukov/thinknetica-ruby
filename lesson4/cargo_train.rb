@@ -6,11 +6,10 @@ class CargoTrain < Train
 
   def initialize(number)
     super(number, "cargo")
-  
   end
 
   def add_wagon(wagon)
-    if wagon.type == "cargo"
+    if wagon.type == :cargo
       super(wagon)
     end
   end
