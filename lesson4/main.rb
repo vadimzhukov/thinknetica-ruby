@@ -82,8 +82,16 @@ class Main
     title = input_of_action('Введите название станции')
     @stations << Station.new(title)
     show_stations
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+
+# QUESTION 1.1: такой способ оборачивания в метод rescue не сработал (исключение возникает раньше вызова метода, до его вызова видимо дело не доходит? 
+  def check_repeat
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
+  end
+    # QUESTION 1.2: === ?? как сделать универсальный rescue, чтобы каждый раз в методах не дублировать все 3 строки с rescue, puts, repeat ?? ===
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -100,8 +108,8 @@ class Main
                end
     puts "Создан поезд номер #{number} с типом #{type}"
     show_trains
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -112,8 +120,8 @@ class Main
     last_station = choose_station
     @routes << Route.new(first_station, last_station)
     show_routes
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -145,11 +153,17 @@ class Main
   def move_forward
     train = choose_train
     train.move(:forward)
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def move_backward
     train = choose_train
     train.move(:backward)
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   def add_wagon
@@ -165,8 +179,8 @@ class Main
       wagon = CargoWagon.new(volume)
     end
     train.add_wagon(wagon)
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -176,6 +190,8 @@ class Main
   end
 
   #===== Procs ============
+  # QUESTION 2: === корректно ли такое (ниже) оборачивание проков в методы для дальнейшего использования в методах? 
+  # как наиболее грамотно сделать проки + передачу в метод в ДЗ части 8? ===
   def trains_info
     trains_info = proc do |tr|
       puts "Поезд №#{tr.number} Тип:#{tr.type} Вагонов:#{tr.wagons.size}"
@@ -185,8 +201,7 @@ class Main
   def wagons_info
     wagons_info = proc do |w|
       print "№ #{w.number}, тип: #{w.type}, "
-      puts "объем свободный|занятый: #{w.available_volume}|#{w.occupied_volume}" if w.type == :cargo
-      puts "мест свободно|занято: #{w.available_places}|#{w.occupied_places}" if w.type == :passenger
+      puts "мест свободно|занято: #{w.available_places}|#{w.occupied_places}"
     end
   end
 
@@ -234,24 +249,24 @@ class Main
 
   def occupy_wagon
     train = choose_train
-    wagon = choose_wagon(train)
+    wagon = choose_wagon
     if wagon.nil?
       puts 'У данного поезда нет вагонов'
-    else
+    elsif wagon.type == :cargo
+      puts 'Введите объем загрузки грузового вагона'
+      volume = gets.chomp
+      wagon.occupy(volume)
+    elsif wagon.type == :passenger
       wagon.occupy
     end
     show_train_with_wagons(train)
   end
 
+# QUESTION 3: имеет ли значение порядок объявления методов? Просьба прокомментировать порядок объявления методов и их видимость в данном классе  
+
   #=========== Private methods ========================
 
   private
-
-  def repeat_if_err
-  rescue StandardError => e
-    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
-  end
 
   def choose_train
     show_trains
@@ -274,18 +289,15 @@ class Main
 
   def choose_wagon(train)
     return nil if train.wagons.empty?
-
     train.wagons.each do |w|
-      case train.type
-      when :cargo
-        puts "№ #{w.number} - #{w.type} свободно|занято объема #{w.available_volume}|#{w.occupied_volume}"
-      when :passenger
-        puts "№ #{w.number} - #{w.type} свободно|занято мест #{w.available_places}|#{w.occupied_places}"
-      end
+      puts "№ #{w.number} - #{w.type} свободно|занято мест/объема #{w.available_places}|#{w.occupied_places}"
     end
     puts 'Введите номер вагона'
     wagon_number = gets.chomp.to_i
     wagon = train.wagons.find { |w| w.number == wagon_number }
+    rescue StandardError => e
+      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
   end
 
   #========== Test data ===================
@@ -315,10 +327,6 @@ class Main
     @routes << Route.new(@stations[0], @stations[1])
     @routes << Route.new(@stations[0], @stations[2])
     @routes << Route.new(@stations[3], @stations[4])
-
-    @stations[0].receive_train(@trains[0])
-    @stations[0].receive_train(@trains[1])
-    @stations[3].receive_train(@trains[2])
 
     @trains[0].set_route(@routes[0])
     @trains[1].set_route(@routes[1])

@@ -75,6 +75,7 @@ class Train
   def set_route(route)
     @route = route
     @current_station = route.stations.first
+    @current_station.receive_train(self)
   end
 
   def move(direction)

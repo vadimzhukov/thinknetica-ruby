@@ -3,11 +3,13 @@ require_relative 'wagon'
 class Wagon
   include Manufacturer
  
-  attr_reader :type, :number
+  attr_reader :type, :number, :occupied_places, :total_places
 
   @instances = 0
 
-  def initialize(type)
+  def initialize(type, total_places)
+    @total_places = total_places.to_f
+    @occupied_places = 0
     @type = type.to_sym
     register_instance
     @number = self.class.instances
@@ -15,6 +17,10 @@ class Wagon
 
   def self.instances
     @instances
+  end
+
+  def available_places
+    @total_places - @occupied_places
   end
 
   private

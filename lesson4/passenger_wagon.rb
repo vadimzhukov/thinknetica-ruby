@@ -1,11 +1,6 @@
 class PassengerWagon < Wagon
-  attr_accessor :occupied_places, :available_places
-
   def initialize(total_places)
-    super(:passenger)
-    @total_places = total_places.to_i
-    @available_places = total_places.to_i
-    @occupied_places = 0
+    super(:passenger, total_places)
   end
 
   def occupy
