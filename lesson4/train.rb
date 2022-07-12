@@ -1,23 +1,27 @@
-# train.rb
+# frozen_string_literal: true
+
 require_relative 'manufacturer'
 require_relative 'instance_counter'
 require_relative 'validation'
 require_relative 'iterators'
 
+# This class describes trains its common attributes and its common behavior
 class Train
   include Manufacturer
   include InstanceCounter
   include Validation
   include Iterators
 
-  FORWARD = :forward
-  BACKWARD = :backward
-  NUMBER_LENGTH = (1..10)
+  NUMBER_LENGTH = (1..10).freeze
+
+  @@trains = []
+
+  class << self
+    attr_accessor :trains
+  end
 
   attr_accessor :speed
   attr_reader :wagons, :current_station, :number, :type
-
-  @@trains = []
 
   def initialize(number, type)
     @number = number
@@ -53,7 +57,7 @@ class Train
   end
 
   def add_wagon(wagon)
-    if speed == 0
+    if speed.zero?
       @wagons << wagon
     else
       puts 'Для прицепления вагона поезд должен остановиться'
@@ -61,8 +65,8 @@ class Train
   end
 
   def remove_wagon
-    if speed == 0
-      if @wagons.size > 0
+    if speed.zero?
+      if @wagons.size.positive?
         @wagons.pop
       else
         puts 'В поезде нет вагонов'
@@ -72,26 +76,28 @@ class Train
     end
   end
 
-  def set_route(route)
+  def route=(route)
     @route = route
     @current_station = route.stations.first
     @current_station.receive_train(self)
   end
 
-  def move(direction)
-    if direction == FORWARD && !last_station?(@current_station, @route)
+  def move_forward
+    unless last_station?(@current_station, @route)
       @current_station = @route.stations[@route.stations.index(@current_station) + 1]
       @current_station.receive_train(self)
     end
+  end
 
-    if direction == BACKWARD && !first_station?(@current_station, @route)
+  def move_backward
+    unless first_station?(@current_station, @route)
       @current_station = @route.stations[@route.stations.index(@current_station) - 1]
       @current_station.receive_train(self)
     end
   end
 
   def iterate_wagons(block)
-    wagons.each{|w| block.call(w)}
+    wagons.each { |w| block.call(w) }
   end
 
   #==========#

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'instance_counter'
 require_relative 'validation'
 require_relative 'train'
@@ -5,28 +7,33 @@ require_relative 'passenger_train'
 require_relative 'cargo_train'
 require_relative 'iterators'
 
+# This class describes stations of railway
 class Station
   include InstanceCounter
   include Validation
   include Iterators
 
-  TITLE_LENGTH = (1..30)
-  attr_reader :title
+  TITLE_LENGTH = (1..30).freeze
+  class << self
+    attr_reader :stations
+  end
 
-  @@stations = []
+  attr_reader :title, :trains
+
+  @stations = []
 
   def initialize(title)
     @title = title
     validate!
     @trains = []
     register_instance
-    @@stations << self
+    self.class.stations << self
   end
 
   def validate!
     validate_not_nil(title)
     validate_length(title, TITLE_LENGTH.first, TITLE_LENGTH.last)
-    validate_not_yet_existed('@title', title, @@stations)
+    validate_not_yet_existed('@title', title, self.class.stations)
   end
 
   def valid?
@@ -34,18 +41,6 @@ class Station
     true
   rescue StandardError
     false
-  end
-
-  def self.stations
-    @@stations
-  end
-
-  def self.all
-    @@stations
-  end
-
-  def trains
-    @trains
   end
 
   def trains_info
@@ -63,9 +58,8 @@ class Station
   end
 
   def send_train
-    @trains.pop if @trains
+    @trains&.pop
   end
-
 end
 
 #=== tests ====

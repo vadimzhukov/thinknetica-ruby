@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
 require_relative 'wagon'
 
+# This class describes wagon and its behavior
 class Wagon
   include Manufacturer
- 
+
   attr_reader :type, :number, :occupied_places, :total_places
 
   @instances = 0
@@ -15,25 +18,24 @@ class Wagon
     @number = self.class.instances
   end
 
-  def self.instances
-    @instances
+  class << self
+    attr_reader :instances
   end
 
   def available_places
     @total_places - @occupied_places
   end
 
-  private
-  attr_writer :number
-
   def self.increase_instance
     @instances ||= 0
     @instances += 1
-    
   end
+
+  private
+
+  attr_writer :number
 
   def register_instance
     self.class.send :increase_instance
   end
-  
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'station'
 require_relative 'route'
 require_relative 'train'
@@ -7,40 +9,44 @@ require_relative 'wagon'
 require_relative 'passenger_wagon'
 require_relative 'cargo_wagon'
 
+# This class is a main application workflow it also consists methods covering user inputs and provides output
 class Main
   MENU_FIRST_ITEM = 0
   MENU_LAST_ITEM = 16
   EXIT_ACTION = 99
 
-  attr_reader :MENU_FIRST_ITEM, :MENU_LAST_ITEM, :EXIT_ACTION, :menu
+  attr_reader :exit_action_num, :menu
+
+  MENU = [
+    { number: 0, message: 'Список команд', action: :show_menu },
+    { number: 1, message: 'Создать станцию', action: :create_station },
+    { number: 2, message: 'Создать поезд', action: :create_train },
+    { number: 3, message: 'Создать маршрут', action: :create_route },
+    { number: 4, message: 'Управлять станциями на маршруте (добавлять, удалять)',
+      action: :add_remove_station_to_route },
+    { number: 5, message: 'Назначить маршрут поезду', action: :set_route },
+    { number: 6, message: 'Добавить вагон к поезду', action: :add_wagon },
+    { number: 7, message: 'Отцепить вагон от поезда', action: :remove_wagon },
+    { number: 8, message: 'Перемеcтить поезд по маршруту вперед', action: :move_forward },
+    { number: 9, message: 'Перемеcтить поезд по маршруту назад', action: :move_backward },
+    { number: 10, message: 'Просмотреть список станций и список поездов на станции',
+      action: :show_stations_with_trains },
+    { number: 11, message: 'Список станций', action: :show_stations },
+    { number: 12, message: 'Список поездов', action: :show_trains },
+    { number: 13, message: 'Список маршрутов', action: :show_routes },
+    { number: 14, message: 'Список поездов на станции', action: :show_trains_on_station },
+    { number: 15, message: 'Список вагонов поезда', action: :show_train_with_wagons },
+    { number: 16, message: 'Занять место/ объем в вагоне', action: :occupy_wagon },
+    { number: 99, message: 'Завершить выполнение программы', action: :exit }
+  ].freeze
 
   def initialize
     @trains = []
     @stations = []
     @routes = []
     @wagons = []
-    @menu = [
-      { number: 0, message: 'Список команд', action: :show_menu },
-      { number: 1, message: 'Создать станцию', action: :create_station },
-      { number: 2, message: 'Создать поезд', action: :create_train },
-      { number: 3, message: 'Создать маршрут', action: :create_route },
-      { number: 4, message: 'Управлять станциями на маршруте (добавлять, удалять)',
-        action: :add_remove_station_to_route },
-      { number: 5, message: 'Назначить маршрут поезду', action: :set_route },
-      { number: 6, message: 'Добавить вагон к поезду', action: :add_wagon },
-      { number: 7, message: 'Отцепить вагон от поезда', action: :remove_wagon },
-      { number: 8, message: 'Перемеcтить поезд по маршруту вперед', action: :move_forward },
-      { number: 9, message: 'Перемеcтить поезд по маршруту назад', action: :move_backward },
-      { number: 10, message: 'Просмотреть список станций и список поездов на станции',
-        action: :show_stations_with_trains },
-      { number: 11, message: 'Список станций', action: :show_stations },
-      { number: 12, message: 'Список поездов', action: :show_trains },
-      { number: 13, message: 'Список маршрутов', action: :show_routes },
-      { number: 14, message: 'Список поездов на станции', action: :show_trains_on_station },
-      { number: 15, message: 'Список вагонов поезда', action: :show_train_with_wagons },
-      { number: 16, message: 'Занять место/ объем в вагоне', action: :occupy_wagon },
-      { number: 99, message: 'Завершить выполнение программы', action: :exit }
-    ]
+    @menu = MENU
+    @exit_action_num = EXIT_ACTION
   end
 
   def start
@@ -58,11 +64,7 @@ class Main
     loop do
       print 'выполнить команду: '
       action_num = gets.chomp.to_i
-      if (action_num >= MENU_FIRST_ITEM && action_num <= MENU_LAST_ITEM) || action_num == EXIT_ACTION
-        return action_num
-      else
-        puts "Введите номер действия от #{MENU_FIRST_ITEM} до #{MENU_LAST_ITEM}"
-      end
+      return action_num if (action_num >= MENU_FIRST_ITEM && action_num <= MENU_LAST_ITEM) || action_num == EXIT_ACTION
     end
   end
 
@@ -75,41 +77,28 @@ class Main
 
   def input_of_action(message)
     puts message
-    input = gets.chomp
+    gets.chomp
   end
 
   def create_station
     title = input_of_action('Введите название станции')
     @stations << Station.new(title)
     show_stations
-
-# QUESTION 1.1: такой способ оборачивания в метод rescue не сработал (исключение возникает раньше вызова метода, до его вызова видимо дело не доходит? 
-  def check_repeat
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
-  end
-    # QUESTION 1.2: === ?? как сделать универсальный rescue, чтобы каждый раз в методах не дублировать все 3 строки с rescue, puts, repeat ?? ===
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
   def create_train
     number = input_of_action('Введите номер поезда в формате <abc-de> состоящий из букв либо цифр')
-    type = input_of_action('Введите тип поезда (passenger/cargo)')
-    @trains << case type
-               when type.to_sym == :passenger
-                 PassengerTrain.new(number)
-               when type.to_sym == :cargo
-                 CargoTrain.new(number)
-               else
-                 Train.new(number, type)
-               end
-    puts "Создан поезд номер #{number} с типом #{type}"
-    show_trains
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    type = input_of_action('Введите тип поезда (passenger/cargo)').to_sym
+    train = case type
+            when :passenger then PassengerTrain.new(number)
+            when :cargo then CargoTrain.new(number)
+            end
+    @trains << train
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -120,8 +109,8 @@ class Main
     last_station = choose_station
     @routes << Route.new(first_station, last_station)
     show_routes
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -146,42 +135,46 @@ class Main
   def set_route
     train = choose_train
     route = choose_route
-    train.set_route(route)
+    train.route(route)
     puts "Поезд #{train.number} на маршруте #{route.number}"
   end
 
   def move_forward
     train = choose_train
-    train.move(:forward)
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    train.move_forward
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
   def move_backward
     train = choose_train
-    train.move(:backward)
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    train.move_backward
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
   def add_wagon
     train = choose_train
-    case train.type
+    wagon = create_wagon(train.type)
+    train.add_wagon(wagon)
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    retry
+  end
+
+  def create_wagon(type)
+    case type
     when :passenger
       puts 'Введите количество мест вагона'
       places = gets.chomp
-      wagon = PassengerWagon.new(places)
+      PassengerWagon.new(places)
     when :cargo
       puts 'Введите максимальный объем вагона'
       volume = gets.chomp
-      wagon = CargoWagon.new(volume)
+      CargoWagon.new(volume)
     end
-    train.add_wagon(wagon)
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
-    retry
   end
 
   def remove_wagon
@@ -190,23 +183,21 @@ class Main
   end
 
   #===== Procs ============
-  # QUESTION 2: === корректно ли такое (ниже) оборачивание проков в методы для дальнейшего использования в методах? 
-  # как наиболее грамотно сделать проки + передачу в метод в ДЗ части 8? ===
   def trains_info
-    trains_info = proc do |tr|
+    proc do |tr|
       puts "Поезд №#{tr.number} Тип:#{tr.type} Вагонов:#{tr.wagons.size}"
     end
   end
 
   def wagons_info
-    wagons_info = proc do |w|
+    proc do |w|
       print "№ #{w.number}, тип: #{w.type}, "
       puts "мест свободно|занято: #{w.available_places}|#{w.occupied_places}"
     end
   end
 
   def trains_with_wagons_info
-    trains_with_wagons_info = proc do |tr|
+    proc do |tr|
       puts "Поезд №#{tr.number} Тип:#{tr.type} Вагонов:#{tr.wagons.size}"
       puts 'Вагоны поезда: '
       tr.iterate_wagons(wagons_info)
@@ -250,19 +241,11 @@ class Main
   def occupy_wagon
     train = choose_train
     wagon = choose_wagon
-    if wagon.nil?
-      puts 'У данного поезда нет вагонов'
-    elsif wagon.type == :cargo
-      puts 'Введите объем загрузки грузового вагона'
-      volume = gets.chomp
-      wagon.occupy(volume)
-    elsif wagon.type == :passenger
-      wagon.occupy
-    end
+    puts 'Введите количество мест/ объем загрузки вагона'
+    places = gets.chomp
+    wagon.occupy(places)
     show_train_with_wagons(train)
   end
-
-# QUESTION 3: имеет ли значение порядок объявления методов? Просьба прокомментировать порядок объявления методов и их видимость в данном классе  
 
   #=========== Private methods ========================
 
@@ -271,32 +254,29 @@ class Main
   def choose_train
     show_trains
     train_number = input_of_action('Выберите номер поезда:').to_s
-    train = @trains.find { |t| t.number == train_number }
-    puts 'Такой поезд не найден' if train.nil?
-    train
+    @trains.find { |t| t.number == train_number }
   end
 
   def choose_route
     show_routes
     route_number = input_of_action('Введите номер маршрута').to_i
-    route = @routes.find { |r| r.number == route_number }
+    @routes.find { |r| r.number == route_number }
   end
 
   def choose_station
     station_title = input_of_action('Введите название станции:')
-    station = @stations.find { |s| s.title == station_title }
+    @stations.find { |s| s.title == station_title }
   end
 
-  def choose_wagon(train)
+  def choose_wagon(train = choose_train)
     return nil if train.wagons.empty?
-    train.wagons.each do |w|
-      puts "№ #{w.number} - #{w.type} свободно|занято мест/объема #{w.available_places}|#{w.occupied_places}"
-    end
+
+    show_train_with_wagons(train)
     puts 'Введите номер вагона'
     wagon_number = gets.chomp.to_i
-    wagon = train.wagons.find { |w| w.number == wagon_number }
-    rescue StandardError => e
-      puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
+    train.wagons.find { |w| w.number == wagon_number }
+  rescue StandardError => e
+    puts "Зафиксирована ошибка ввода: #{e.message}.\nПовторите ввод "
     retry
   end
 
@@ -328,19 +308,19 @@ class Main
     @routes << Route.new(@stations[0], @stations[2])
     @routes << Route.new(@stations[3], @stations[4])
 
-    @trains[0].set_route(@routes[0])
-    @trains[1].set_route(@routes[1])
-    @trains[2].set_route(@routes[2])
+    @trains[0].route = (@routes[0])
+    @trains[1].route = (@routes[1])
+    @trains[2].route = (@routes[2])
   end
+  #======================================
 end
-#======================================
 
 game = Main.new
 game.start
 #============= main loop ==============
-while true
+loop do
   action_num = game.action_input
-  break if action_num == game.EXIT_ACTION
+  break if action_num == game.exit_action_num
 
   action = game.get_action(action_num)
   puts "--- #{game.menu.find { |m| m[:number] == action_num }[:message]} ---"
