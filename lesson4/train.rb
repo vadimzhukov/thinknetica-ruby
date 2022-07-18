@@ -23,6 +23,11 @@ class Train
   attr_accessor :speed
   attr_reader :wagons, :current_station, :number, :type
 
+  validate :number, :presence
+  validate :number, :format, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i
+  validate :type, :presence
+  validate :type, :format, /^(passenger|cargo)$/
+
   def initialize(number, type)
     @number = number
     @type = type.to_sym
@@ -31,21 +36,6 @@ class Train
     @wagons = []
     @@trains << self
     register_instance
-  end
-
-  def validate!
-    validate_not_nil(@number)
-    validate_length(@number, NUMBER_LENGTH.first, NUMBER_LENGTH.last)
-    validate_not_yet_existed('@number', @number, @@trains)
-    validate_by_regexp(@type, /^(passenger|cargo)$/)
-    validate_by_regexp(@number, /^[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}$/i)
-  end
-
-  def valid?
-    validate!
-    true
-  rescue StandardError
-    false
   end
 
   def self.find(number)

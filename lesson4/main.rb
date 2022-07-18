@@ -135,7 +135,7 @@ class Main
   def set_route
     train = choose_train
     route = choose_route
-    train.route(route)
+    train.route=(route)
     puts "Поезд #{train.number} на маршруте #{route.number}"
   end
 

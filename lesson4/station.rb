@@ -20,6 +20,8 @@ class Station
 
   attr_reader :title, :trains
 
+  validate :title, :presence
+
   @stations = []
 
   def initialize(title)
@@ -28,19 +30,6 @@ class Station
     @trains = []
     register_instance
     self.class.stations << self
-  end
-
-  def validate!
-    validate_not_nil(title)
-    validate_length(title, TITLE_LENGTH.first, TITLE_LENGTH.last)
-    validate_not_yet_existed('@title', title, self.class.stations)
-  end
-
-  def valid?
-    validate!
-    true
-  rescue StandardError
-    false
   end
 
   def trains_info
