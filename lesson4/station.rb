@@ -21,13 +21,15 @@ class Station
   attr_reader :title, :trains
 
   validate :title, :presence
+  validate :title, :length, [1, 20]
+  validate :title, :not_yet_existed
 
   @stations = []
 
   def initialize(title)
     @title = title
-    validate!
     @trains = []
+    validate!(self.class.stations)
     register_instance
     self.class.stations << self
   end

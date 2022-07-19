@@ -31,6 +31,7 @@ class Train
   def initialize(number, type)
     @number = number
     @type = type.to_sym
+    puts "#{number} , #{type}"
     validate!
     @speed = 0
     @wagons = []

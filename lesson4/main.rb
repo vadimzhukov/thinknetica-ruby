@@ -95,6 +95,8 @@ class Main
     train = case type
             when :passenger then PassengerTrain.new(number)
             when :cargo then CargoTrain.new(number)
+              else
+                raise "Некорректно указан тип поезда"
             end
     @trains << train
   rescue StandardError => e
@@ -284,9 +286,9 @@ class Main
   def seed
     @stations << Station.new('Moscow')
     @stations << Station.new('Piter')
-    @stations << Station.new('Vladivostok')
-    @stations << Station.new('Murmansk')
-    @stations << Station.new('Ekaterinburg')
+    # @stations << Station.new('Vladivostok')
+    # @stations << Station.new('Murmansk')
+    # @stations << Station.new('Ekaterinburg')
 
     @trains << PassengerTrain.new('Ф12-AC')
     @trains[0].add_wagon(PassengerWagon.new(36))
@@ -299,18 +301,18 @@ class Main
     @trains[1].add_wagon(CargoWagon.new(30))
     @trains[1].add_wagon(CargoWagon.new(40))
 
-    @trains << PassengerTrain.new('555-LS')
+    @trains << PassengerTrain.new('55S-LS')
     @trains[2].add_wagon(PassengerWagon.new(36))
     @trains[2].add_wagon(PassengerWagon.new(32))
     @trains[2].add_wagon(PassengerWagon.new(32))
 
     @routes << Route.new(@stations[0], @stations[1])
-    @routes << Route.new(@stations[0], @stations[2])
-    @routes << Route.new(@stations[3], @stations[4])
+    # @routes << Route.new(@stations[0], @stations[2])
+    # @routes << Route.new(@stations[3], @stations[4])
 
     @trains[0].route = (@routes[0])
-    @trains[1].route = (@routes[1])
-    @trains[2].route = (@routes[2])
+    # @trains[1].route = (@routes[1])
+    # @trains[2].route = (@routes[2])
   end
   #======================================
 end

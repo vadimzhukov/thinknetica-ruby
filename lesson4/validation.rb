@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'pry'
 
 # This module has methods to validate different values for classes and instances
 module Validation
@@ -12,7 +13,6 @@ module Validation
     def validations
       @validations ||= []
     end
-  
     def validate(attribute, validation_type, validation_mask = nil)
       validations.push({attr: attribute, type: validation_type, mask: validation_mask})
     end
@@ -20,22 +20,6 @@ module Validation
 
   # This module validates parameters of instances
   module InstanceMethods
-
-    def validate!
-      self.class.validations.each do |hash|
-        inst_attr_val = self.instance_variable_get("@#{hash[:attr]}")
-        case hash[:type]
-        when :presence
-          raise "=== Error: #{hash[:attr]} is nil ===" if inst_attr_val == nil 
-          raise "=== Error: #{hash[:attr]} is empty ===" if inst_attr_val.to_s == ""
-        when :format
-          raise "=== Error: #{hash[:attr]} does not fit regexp: #{hash[:mask]} ===" if inst_attr_val.to_s !~ hash[:mask]
-        when :type
-          raise "=== Error: #{hash[:attr]} has different class #{inst_attr_val.class} than #{hash[:mask]} ===" if inst_attr_val.class.to_s != hash[:mask].to_s 
-        end
-      end
-    end
-  
     def valid?
       validate!
       true
@@ -43,33 +27,43 @@ module Validation
       false
     end
 
-    # #===== Deprecated =====
-    # def validate_not_nil(value)
-    #   raise 'Передано некорректное пустое значение/ введенный объект не найден' if value.nil?
-    # end
-
-    
-
-    # def validate_by_regexp(value, regexp)
-    #   raise "Переданное значение - #{value} - не соответствует regexp: #{regexp}" if value.to_s !~ regexp
-    # end
-
-    # #=======================
-    def validate_length(value, min_length, max_length)
-      if value.to_s.length > max_length || value.to_s.length < min_length
-        raise "Длина значения - #{value} - некорректна, должна быть в интервале #{min_length} - #{max_length} символов"
+    def validate!(options = nil)
+      source = self.class.superclass == Object ? self.class : self.class.superclass
+      checks = source.instance_variable_get("@validations")
+      
+      checks.each do |hash|
+        val = self.instance_variable_get("@#{hash[:attr]}")
+        option = hash[:mask] ? hash[:mask] : options
+        send("validate_#{hash[:type].to_s}".to_sym, hash[:attr],  val, option)
       end
     end
+  
+    def validate_presence(name, value, _)
+      raise "=== Error: #{name} value is nil ===" if value == nil 
+      raise "=== Error: #{name} value is empty ===" if value.to_s == ""
+    end
 
-    def validate_not_yet_existed(parameter, value, arr)
-      raise "Объект с #{parameter} == #{value} уже существует!" if arr.any? do |i|
-                                                                     i.instance_variable_get(parameter.to_sym) == value
+    def validate_format(name, value, regexp_mask)
+      raise "=== Error: #{name} value #{value} does not fit regexp: #{regexp_mask.to_s} ===" if value.to_s !~ regexp_mask
+    end
+
+    def validate_type(name, value, type)
+      raise "=== Error: #{name} value #{value} has different class #{value.class} than #{type} ===" if value.class.to_s != type.to_s 
+    end
+
+    def validate_length(name, value, mask)
+      raise "=== Error: Length #{value} is wrong, should be between #{mask.first}-#{mask.last}" unless value.to_s.length.between?(mask.first, mask.last)
+    end
+
+    def validate_not_yet_existed(name, value, arr)
+      raise "=== Error: Object with #{name} == #{value} is already exist!" if arr.any? do |i|
+                                                                     i.instance_variable_get("@#{name}") == value
                                                                    end
     end
 
-    def validate_existed(parameter, value, arr)
-      raise "Объекта с #{parameter} == #{value} не существует!" if arr.none? do |i|
-                                                                     i.instance_variable_get(parameter.to_sym) == value
+    def validate_existed(name, value, arr)
+      raise "=== Error: Object with #{name} == #{value} does not exist!" if arr.none? do |i|
+                                                                     i.instance_variable_get("@#{name}") == value
                                                                    end
     end
   end
